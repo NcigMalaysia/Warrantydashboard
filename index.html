@@ -136,6 +136,12 @@
 <div class="filter-bar">
     <label>📅 Month:</label>
     <select id="monthFilter"><option value="all">All Months</option></select>
+    <label>👥 Category:</label>
+    <select id="categoryFilter">
+        <option value="all">All Categories</option>
+        <option value="User">User</option>
+        <option value="Seller">Seller</option>
+    </select>
     <span id="recordCount" style="color:#64748b;font-size:0.8rem;"></span>
 </div>
 
@@ -212,12 +218,13 @@
     // ============================================================
     // TETAPAN - Tukar SHEET_ID dan SHEET_NAME jika perlu
     // ============================================================
-    const SHEET_ID = '1tSzEJWbMDYcFDMFnrkLeggH7QhkdykpRIreXGx74A3I';
-    const SHEET_NAME = 'Warranty Form';
-    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+    const DASHBOARD_API_URL = 'https://script.google.com/macros/s/AKfycbyZkLm0bGKJMTFBvFrL1N6WjaWFolPsLyMLl05_grQHjZuxcMbly1CjBkW9skb_dgvc/exec?action=dashboard';
+    const LEGACY_SHEET_ID = '1tSzEJWbMDYcFDMFnrkLeggH7QhkdykpRIreXGx74A3I';
+    const LEGACY_SHEET_NAME = 'Warranty Form';
+    const LEGACY_CSV_URL = `https://docs.google.com/spreadsheets/d/${LEGACY_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(LEGACY_SHEET_NAME)}`;
     // ============================================================
 
-    let rawData = [], filteredData = [], currentMonthFilter = 'all', chartInstances = {};
+    let rawData = [], filteredData = [], currentMonthFilter = 'all', currentCategoryFilter = 'all', chartInstances = {};
 
     const PRODUCTS = ['NCIG PRO','NCIG ONE','NCIG CUBE','NPOD PRO'];
     const PRODUCT_COLORS = {'NCIG PRO':'#2563eb','NCIG ONE':'#10b981','NCIG CUBE':'#f59e0b','NPOD PRO':'#8b5cf6'};
@@ -270,6 +277,7 @@
         n['Varian'] = row['Variant']||row['Varian']||row['variant']||'';
         n['Defect'] = row['Defect']||row['defect']||row['Defect Type']||'';
         n['Batch'] = row['Batch Number']||row['Batch']||row['BatchNumber']||row['batch']||'';
+        n['Category'] = row['Category']||row['category']||'';
         // Extract bulan dari Date
         const dateVal = row['Date']||row['Timestamp']||row['date']||'';
         if(dateVal){
@@ -284,24 +292,50 @@
         return n;
     }
 
+    async function loadDashboardApi(){
+        const separator = DASHBOARD_API_URL.includes('?') ? '&' : '?';
+        const res = await fetch(DASHBOARD_API_URL + separator + '_=' + Date.now());
+        if(!res.ok) throw new Error(`Dashboard API HTTP ${res.status}`);
+        const payload = await res.json();
+        if(!payload || payload.success !== true || !Array.isArray(payload.rows)){
+            throw new Error((payload && payload.message) || 'Respons Dashboard API tidak sah');
+        }
+        return payload.rows;
+    }
+
+    async function loadLegacyData(){
+        const res = await fetch(LEGACY_CSV_URL + '&_=' + Date.now());
+        if(!res.ok) throw new Error(`Legacy sheet HTTP ${res.status}`);
+        const text = await res.text();
+        if(!text || text.trim().length < 10) throw new Error('Data lama kosong');
+        return parseCSV(text);
+    }
+
     window.loadData = async function(){
-        showLoading('Memuatkan data dari Google Sheets...');
+        showLoading('Memuatkan data User dan Seller...');
         hideError();
         try{
-            const res = await fetch(CSV_URL+'&_='+Date.now());
-            if(!res.ok) throw new Error(`HTTP ${res.status}`);
-            const text = await res.text();
-            if(!text||text.trim().length<10) throw new Error('Data kosong dari Google Sheets');
-            const parsed = parseCSV(text);
-            if(!parsed.length) throw new Error('Tiada data dijumpai dalam sheet');
+            let parsed;
+            let sourceLabel = 'User + Seller';
+
+            try{
+                parsed = await loadDashboardApi();
+            } catch(apiError){
+                console.warn('Dashboard API belum aktif, menggunakan data lama:', apiError);
+                parsed = await loadLegacyData();
+                sourceLabel = 'Legacy Warranty Form';
+            }
+
+            if(!parsed.length) throw new Error('Tiada data dijumpai');
             rawData = parsed.map(normalizeRow).filter(r=>r['Produk']&&r['Defect']);
-            if(!rawData.length) throw new Error('Tiada data yang sah. Sila semak nama column dalam Google Sheets.');
+            if(!rawData.length) throw new Error('Tiada data warranty yang sah.');
+
             const now = new Date();
-            document.getElementById('statusText').textContent = `✅ Dikemaskini: ${now.toLocaleTimeString('ms-MY')}`;
+            document.getElementById('statusText').textContent =
+                `✅ ${sourceLabel}: ${now.toLocaleTimeString('ms-MY')}`;
             updateAll();
         } catch(err){
-            hideLoading();
-            showError('❌ Gagal memuatkan data: '+err.message+'. Pastikan Google Sheets dah di-share kepada "Anyone with the link".');
+            showError('❌ Gagal memuatkan data: ' + err.message);
             document.getElementById('statusText').textContent = '❌ Gagal memuatkan';
         }
         hideLoading();
@@ -318,7 +352,11 @@
     }
 
     function applyFilter(){
-        filteredData = currentMonthFilter==='all' ? [...rawData] : rawData.filter(r=>r['Bulan']===currentMonthFilter);
+        filteredData = rawData.filter(function(row){
+            const monthMatches = currentMonthFilter === 'all' || row['Bulan'] === currentMonthFilter;
+            const categoryMatches = currentCategoryFilter === 'all' || row['Category'] === currentCategoryFilter;
+            return monthMatches && categoryMatches;
+        });
         document.getElementById('recordCount').textContent=`(${filteredData.length} records)`;
     }
 
@@ -403,9 +441,21 @@
         PRODUCT_CONFIG.forEach(c=>{ renderProductHeatmap(c); renderProductPie(c); renderBatchTable(c); });
     }
 
-    document.getElementById('monthFilter').addEventListener('change',function(e){
-        currentMonthFilter=e.target.value; applyFilter(); renderKPI(); renderVolumeChart();
+    function refreshDashboardViews(){
+        applyFilter();
+        renderKPI();
+        renderVolumeChart();
         PRODUCT_CONFIG.forEach(c=>{ renderProductHeatmap(c); renderProductPie(c); renderBatchTable(c); });
+    }
+
+    document.getElementById('monthFilter').addEventListener('change',function(e){
+        currentMonthFilter=e.target.value;
+        refreshDashboardViews();
+    });
+
+    document.getElementById('categoryFilter').addEventListener('change',function(e){
+        currentCategoryFilter=e.target.value;
+        refreshDashboardViews();
     });
 
     // Load data bila page buka
