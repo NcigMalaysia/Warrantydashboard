@@ -114,6 +114,10 @@
         .monthly-product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px;}
         .monthly-product-grid .chart-card{margin-bottom:0;min-height:330px;}
         .monthly-product-grid .chart-wrapper{height:260px;}
+        .variant-insight{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 12px;}
+        .variant-insight span{display:inline-flex;align-items:center;padding:5px 10px;border-radius:50px;background:#f8fafc;border:1px solid #e2e8f0;color:#334155;font-size:0.74rem;font-weight:700;}
+        .variant-insight .top-variant{background:#fef2f2;border-color:#fecaca;color:#b91c1c;}
+        .variant-insight .top-defect{background:#fff7ed;border-color:#fed7aa;color:#c2410c;}
         .filter-bar.monthly-mode .month-only{display:none;}
         .loading-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);z-index:200;justify-content:center;align-items:center;flex-direction:column;gap:16px;}
         .loading-overlay.active{display:flex;}
@@ -258,17 +262,17 @@
 
     <section id="monthlyPanel" class="tab-panel">
         <div class="section-header"><div class="section-icon" style="background:#dc2626;">⚠️</div><h2 style="color:#991b1b;">Monthly Complaint Monitor</h2><span class="badge" style="background:#fef2f2;color:#b91c1c;">Management View</span></div>
-        <div class="management-note"><strong>Nota:</strong> Analisis ini berdasarkan jumlah warranty complaint yang diterima, bukan defect rate kerana data unit jualan tidak tersedia. Semua graf menunjukkan trend setiap bulan dan mengikut penapis Category.</div>
+        <div class="management-note"><strong>Nota:</strong> Analisis ini berdasarkan jumlah warranty complaint yang diterima, bukan defect rate kerana data unit jualan tidak tersedia. Setiap graf produk menunjukkan lima variant dengan complaint tertinggi mengikut bulan, serta variant dan defect utama. Semua analisis mengikut penapis Category.</div>
         <div class="chart-card">
             <h3>📈 All Products — Monthly Comparison</h3>
             <div class="chart-wrapper"><canvas id="chartMonthlyComplaint"></canvas></div>
         </div>
         <div class="monthly-product-grid">
-            <div class="chart-card"><h3 style="color:#2563eb;">NCIG PRO — Monthly Complaints</h3><div class="chart-wrapper"><canvas id="monthlyNcigPro"></canvas></div></div>
-            <div class="chart-card"><h3 style="color:#10b981;">NCIG ONE — Monthly Complaints</h3><div class="chart-wrapper"><canvas id="monthlyNcigOne"></canvas></div></div>
-            <div class="chart-card"><h3 style="color:#f59e0b;">NCIG CUBE — Monthly Complaints</h3><div class="chart-wrapper"><canvas id="monthlyNcigCube"></canvas></div></div>
-            <div class="chart-card"><h3 style="color:#8b5cf6;">NPOD PRO — Monthly Complaints</h3><div class="chart-wrapper"><canvas id="monthlyNpodPro"></canvas></div></div>
-            <div class="chart-card"><h3 style="color:#ec4899;">NCIG ULTRA — Monthly Complaints</h3><div class="chart-wrapper"><canvas id="monthlyNcigUltra"></canvas></div></div>
+            <div class="chart-card"><h3 style="color:#2563eb;">NCIG PRO — Variant Complaint Trend (Top 5)</h3><div class="variant-insight" id="monthlyNcigProInsight"></div><div class="chart-wrapper"><canvas id="monthlyNcigPro"></canvas></div></div>
+            <div class="chart-card"><h3 style="color:#10b981;">NCIG ONE — Variant Complaint Trend (Top 5)</h3><div class="variant-insight" id="monthlyNcigOneInsight"></div><div class="chart-wrapper"><canvas id="monthlyNcigOne"></canvas></div></div>
+            <div class="chart-card"><h3 style="color:#f59e0b;">NCIG CUBE — Variant Complaint Trend (Top 5)</h3><div class="variant-insight" id="monthlyNcigCubeInsight"></div><div class="chart-wrapper"><canvas id="monthlyNcigCube"></canvas></div></div>
+            <div class="chart-card"><h3 style="color:#8b5cf6;">NPOD PRO — Variant Complaint Trend (Top 5)</h3><div class="variant-insight" id="monthlyNpodProInsight"></div><div class="chart-wrapper"><canvas id="monthlyNpodPro"></canvas></div></div>
+            <div class="chart-card"><h3 style="color:#ec4899;">NCIG ULTRA — Variant Complaint Trend (Top 5)</h3><div class="variant-insight" id="monthlyNcigUltraInsight"></div><div class="chart-wrapper"><canvas id="monthlyNcigUltra"></canvas></div></div>
         </div>
         <div class="chart-card">
             <h3>🏆 Highest Complaint Product by Month</h3>
@@ -495,30 +499,76 @@
         PRODUCTS.forEach(function(product){
             const chartKey = 'monthlyProduct:' + product;
             destroyChart(chartKey);
-            const canvas = document.getElementById(MONTHLY_CANVASES[product]);
-            if(!canvas) return;
-            const values = months.map(function(month){ return (monthMap[month][product]||[]).length; });
+            const canvasId = MONTHLY_CANVASES[product];
+            const canvas = document.getElementById(canvasId);
+            const insight = document.getElementById(canvasId+'Insight');
+            if(!canvas || !insight) return;
+
+            const productRows = data.filter(function(row){ return row['Produk']===product; });
+            const variantTotals = {};
+            productRows.forEach(function(row){
+                const variant = row['Varian'] || 'Unknown';
+                variantTotals[variant] = (variantTotals[variant]||0)+1;
+            });
+            const topVariants = Object.entries(variantTotals)
+                .sort(function(a,b){ return b[1]-a[1]; })
+                .slice(0,5);
+            const variantColors = [PRODUCT_COLORS[product]].concat(DEFECT_PALETTE.filter(function(color){ return color!==PRODUCT_COLORS[product]; }));
+            const datasets = topVariants.map(function(entry,index){
+                const variant = entry[0];
+                const color = variantColors[index%variantColors.length];
+                return {
+                    label:variant,
+                    data:months.map(function(month){
+                        return (monthMap[month][product]||[]).filter(function(row){ return (row['Varian']||'Unknown')===variant; }).length;
+                    }),
+                    borderColor:color,
+                    backgroundColor:color+'22',
+                    pointBackgroundColor:color,
+                    pointRadius:3,
+                    pointHoverRadius:5,
+                    borderWidth:2.5,
+                    tension:0.3,
+                    fill:false
+                };
+            });
+
             chartInstances[chartKey] = new Chart(canvas.getContext('2d'),{
                 type:'line',
-                data:{labels:months,datasets:[{
-                    label:product,
-                    data:values,
-                    borderColor:PRODUCT_COLORS[product],
-                    backgroundColor:PRODUCT_COLORS[product]+'22',
-                    pointBackgroundColor:PRODUCT_COLORS[product],
-                    pointRadius:4,
-                    pointHoverRadius:6,
-                    borderWidth:3,
-                    tension:0.3,
-                    fill:true
-                }]},
+                data:{labels:months,datasets:datasets},
                 options:{
                     responsive:true,
                     maintainAspectRatio:false,
-                    plugins:{legend:{display:false}},
+                    interaction:{mode:'index',intersect:false},
+                    plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:8,padding:10,font:{size:10}}}},
                     scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}
                 }
             });
+
+            insight.innerHTML='';
+            if(topVariants.length){
+                const topVariantName = topVariants[0][0];
+                const topVariantTotal = topVariants[0][1];
+                const topVariantRows = productRows.filter(function(row){ return (row['Varian']||'Unknown')===topVariantName; });
+                const defectTotals = {};
+                topVariantRows.forEach(function(row){
+                    const defect = row['Defect']||'Unknown';
+                    defectTotals[defect]=(defectTotals[defect]||0)+1;
+                });
+                const topDefect = Object.entries(defectTotals).sort(function(a,b){ return b[1]-a[1]; })[0] || ['Unknown',0];
+                const variantTag = document.createElement('span');
+                variantTag.className='top-variant';
+                variantTag.textContent='Highest variant: '+topVariantName+' ('+topVariantTotal+')';
+                const defectTag = document.createElement('span');
+                defectTag.className='top-defect';
+                defectTag.textContent='Top defect: '+topDefect[0]+' ('+topDefect[1]+')';
+                insight.appendChild(variantTag);
+                insight.appendChild(defectTag);
+            } else {
+                const emptyTag = document.createElement('span');
+                emptyTag.textContent='No complaint data';
+                insight.appendChild(emptyTag);
+            }
         });
 
         const tbody = document.querySelector('#monthlyComplaintTable tbody');
