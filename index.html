@@ -105,6 +105,16 @@
         .management-note strong{color:#7c2d12;}
         .leader-product{font-weight:800;color:#b91c1c;}
         .share-badge{display:inline-block;background:#fef2f2;color:#b91c1c;padding:3px 8px;border-radius:50px;font-weight:700;font-size:0.72rem;}
+        .dashboard-tabs{max-width:1440px;margin:0 auto;padding:14px 28px 4px;display:flex;gap:8px;}
+        .dashboard-tab{border:1px solid var(--border);background:var(--card-bg);color:#475569;border-radius:10px;padding:10px 18px;font-weight:700;font-size:0.86rem;cursor:pointer;transition:var(--transition);}
+        .dashboard-tab:hover{border-color:#93c5fd;color:#1d4ed8;}
+        .dashboard-tab.active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;box-shadow:0 3px 10px rgba(37,99,235,0.22);}
+        .tab-panel{display:none;}
+        .tab-panel.active{display:block;}
+        .monthly-product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px;}
+        .monthly-product-grid .chart-card{margin-bottom:0;min-height:330px;}
+        .monthly-product-grid .chart-wrapper{height:260px;}
+        .filter-bar.monthly-mode .month-only{display:none;}
         .loading-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);z-index:200;justify-content:center;align-items:center;flex-direction:column;gap:16px;}
         .loading-overlay.active{display:flex;}
         .spinner{width:44px;height:44px;border:4px solid var(--border);border-top:4px solid #2563eb;border-radius:50%;animation:spin 0.7s linear infinite;}
@@ -121,6 +131,9 @@
             .container{padding:6px 10px 20px;}
             .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
             .kpi-card .kpi-value{font-size:1.8rem;}
+            .dashboard-tabs{padding:10px 14px 2px;}
+            .dashboard-tab{flex:1;padding:9px 10px;}
+            .monthly-product-grid{grid-template-columns:1fr;}
         }
     </style>
 </head>
@@ -143,8 +156,8 @@
 </header>
 
 <div class="filter-bar">
-    <label>📅 Month:</label>
-    <select id="monthFilter"><option value="all">All Months</option></select>
+    <label class="month-only">📅 Month:</label>
+    <select class="month-only" id="monthFilter"><option value="all">All Months</option></select>
     <label>👥 Category:</label>
     <select id="categoryFilter">
         <option value="all">All Categories</option>
@@ -154,8 +167,15 @@
     <span id="recordCount" style="color:#64748b;font-size:0.8rem;"></span>
 </div>
 
+<nav class="dashboard-tabs" aria-label="Dashboard views">
+    <button type="button" class="dashboard-tab active" data-panel="overviewPanel">📊 Overview</button>
+    <button type="button" class="dashboard-tab" data-panel="monthlyPanel">📅 Monthly Monitor</button>
+</nav>
+
 <div class="container">
     <div class="error-box" id="errorBox"></div>
+
+    <section id="overviewPanel" class="tab-panel active">
 
     <div class="kpi-grid">
         <div class="kpi-card"><div class="kpi-accent" style="background:#2563eb;"></div><div class="kpi-label">NCIG PRO</div><div class="kpi-value" id="kpiNcigPro" style="color:#2563eb;">-</div><div class="kpi-sub">Total Tickets</div></div>
@@ -168,17 +188,6 @@
     <div class="chart-card">
         <h3>📊 Total Tickets by Product</h3>
         <div class="chart-wrapper"><canvas id="chartVolume"></canvas></div>
-    </div>
-
-    <div class="section-header"><div class="section-icon" style="background:#dc2626;">⚠️</div><h2 style="color:#991b1b;">Monthly High Complaints</h2><span class="badge" style="background:#fef2f2;color:#b91c1c;">Management Overview</span></div>
-    <div class="management-note"><strong>Nota:</strong> Analisis ini berdasarkan jumlah warranty complaint yang diterima, bukan defect rate kerana data unit jualan tidak tersedia. Carta sentiasa menunjukkan semua bulan dan mengikut penapis Category.</div>
-    <div class="chart-card">
-        <h3>📈 Monthly Complaints by Product</h3>
-        <div class="chart-wrapper"><canvas id="chartMonthlyComplaint"></canvas></div>
-    </div>
-    <div class="chart-card">
-        <h3>🏆 Highest Complaint Product by Month</h3>
-        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="monthlyComplaintTable"><thead><tr><th>Month</th><th>Highest Product</th><th>Complaints</th><th>Share of Month</th><th>Top Defect</th></tr></thead><tbody></tbody></table></div>
     </div>
 
     <!-- NCIG PRO -->
@@ -245,6 +254,27 @@
         <h4>📦 Batch / Serial Issues – NCIG ULTRA</h4>
         <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="ncigUltraBatchTable"><thead><tr><th>Variant</th><th>Batch / Serial Number</th><th>Defect Types</th><th>Total</th></tr></thead><tbody></tbody></table></div>
     </div>
+    </section>
+
+    <section id="monthlyPanel" class="tab-panel">
+        <div class="section-header"><div class="section-icon" style="background:#dc2626;">⚠️</div><h2 style="color:#991b1b;">Monthly Complaint Monitor</h2><span class="badge" style="background:#fef2f2;color:#b91c1c;">Management View</span></div>
+        <div class="management-note"><strong>Nota:</strong> Analisis ini berdasarkan jumlah warranty complaint yang diterima, bukan defect rate kerana data unit jualan tidak tersedia. Semua graf menunjukkan trend setiap bulan dan mengikut penapis Category.</div>
+        <div class="chart-card">
+            <h3>📈 All Products — Monthly Comparison</h3>
+            <div class="chart-wrapper"><canvas id="chartMonthlyComplaint"></canvas></div>
+        </div>
+        <div class="monthly-product-grid">
+            <div class="chart-card"><h3 style="color:#2563eb;">NCIG PRO — Monthly Complaints</h3><div class="chart-wrapper"><canvas id="monthlyNcigPro"></canvas></div></div>
+            <div class="chart-card"><h3 style="color:#10b981;">NCIG ONE — Monthly Complaints</h3><div class="chart-wrapper"><canvas id="monthlyNcigOne"></canvas></div></div>
+            <div class="chart-card"><h3 style="color:#f59e0b;">NCIG CUBE — Monthly Complaints</h3><div class="chart-wrapper"><canvas id="monthlyNcigCube"></canvas></div></div>
+            <div class="chart-card"><h3 style="color:#8b5cf6;">NPOD PRO — Monthly Complaints</h3><div class="chart-wrapper"><canvas id="monthlyNpodPro"></canvas></div></div>
+            <div class="chart-card"><h3 style="color:#ec4899;">NCIG ULTRA — Monthly Complaints</h3><div class="chart-wrapper"><canvas id="monthlyNcigUltra"></canvas></div></div>
+        </div>
+        <div class="chart-card">
+            <h3>🏆 Highest Complaint Product by Month</h3>
+            <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="monthlyComplaintTable"><thead><tr><th>Month</th><th>Highest Product</th><th>Complaints</th><th>Share of Month</th><th>Top Defect</th></tr></thead><tbody></tbody></table></div>
+        </div>
+    </section>
 </div>
 
 <script>
@@ -258,10 +288,11 @@
     const LEGACY_CSV_URL = `https://docs.google.com/spreadsheets/d/${LEGACY_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(LEGACY_SHEET_NAME)}`;
     // ============================================================
 
-    let rawData = [], filteredData = [], currentMonthFilter = 'all', currentCategoryFilter = 'all', chartInstances = {};
+    let rawData = [], filteredData = [], currentMonthFilter = 'all', currentCategoryFilter = 'all', activeDashboardTab = 'overviewPanel', chartInstances = {};
 
     const PRODUCTS = ['NCIG PRO','NCIG ONE','NCIG CUBE','NPOD PRO','NCIG ULTRA'];
     const PRODUCT_COLORS = {'NCIG PRO':'#2563eb','NCIG ONE':'#10b981','NCIG CUBE':'#f59e0b','NPOD PRO':'#8b5cf6','NCIG ULTRA':'#ec4899'};
+    const MONTHLY_CANVASES = {'NCIG PRO':'monthlyNcigPro','NCIG ONE':'monthlyNcigOne','NCIG CUBE':'monthlyNcigCube','NPOD PRO':'monthlyNpodPro','NCIG ULTRA':'monthlyNcigUltra'};
     const DEFECT_PALETTE = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#78716c','#14b8a6','#a855f7','#84cc16'];
 
     const PRODUCT_CONFIG = [
@@ -392,7 +423,8 @@
             const categoryMatches = currentCategoryFilter === 'all' || row['Category'] === currentCategoryFilter;
             return monthMatches && categoryMatches;
         });
-        document.getElementById('recordCount').textContent=`(${filteredData.length} records)`;
+        const visibleCount = activeDashboardTab === 'monthlyPanel' ? getManagementData().length : filteredData.length;
+        document.getElementById('recordCount').textContent=`(${visibleCount} records)`;
     }
 
     function getProductData(p){ return filteredData.filter(r=>r['Produk']===p); }
@@ -458,6 +490,35 @@
                 plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:8,padding:14}}},
                 scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}
             }
+        });
+
+        PRODUCTS.forEach(function(product){
+            const chartKey = 'monthlyProduct:' + product;
+            destroyChart(chartKey);
+            const canvas = document.getElementById(MONTHLY_CANVASES[product]);
+            if(!canvas) return;
+            const values = months.map(function(month){ return (monthMap[month][product]||[]).length; });
+            chartInstances[chartKey] = new Chart(canvas.getContext('2d'),{
+                type:'line',
+                data:{labels:months,datasets:[{
+                    label:product,
+                    data:values,
+                    borderColor:PRODUCT_COLORS[product],
+                    backgroundColor:PRODUCT_COLORS[product]+'22',
+                    pointBackgroundColor:PRODUCT_COLORS[product],
+                    pointRadius:4,
+                    pointHoverRadius:6,
+                    borderWidth:3,
+                    tension:0.3,
+                    fill:true
+                }]},
+                options:{
+                    responsive:true,
+                    maintainAspectRatio:false,
+                    plugins:{legend:{display:false}},
+                    scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}
+                }
+            });
         });
 
         const tbody = document.querySelector('#monthlyComplaintTable tbody');
@@ -558,7 +619,22 @@
         PRODUCT_CONFIG.forEach(c=>{ renderProductHeatmap(c); renderProductPie(c); renderBatchTable(c); });
     }
 
-    document.getElementById('monthFilter').addEventListener('change',function(e){
+    function setDashboardTab(panelId){
+        activeDashboardTab = panelId;
+        document.querySelectorAll('.tab-panel').forEach(function(panel){ panel.classList.toggle('active',panel.id===panelId); });
+        document.querySelectorAll('.dashboard-tab').forEach(function(button){ button.classList.toggle('active',button.dataset.panel===panelId); });
+        document.querySelector('.filter-bar').classList.toggle('monthly-mode',panelId==='monthlyPanel');
+        applyFilter();
+        requestAnimationFrame(function(){
+            Object.values(chartInstances).forEach(function(chart){ if(chart) chart.resize(); });
+        });
+    }
+
+    document.querySelectorAll('.dashboard-tab').forEach(function(button){
+        button.addEventListener('click',function(){ setDashboardTab(button.dataset.panel); });
+    });
+
+        document.getElementById('monthFilter').addEventListener('change',function(e){
         currentMonthFilter=e.target.value;
         refreshDashboardViews();
     });
