@@ -119,6 +119,24 @@
         .variant-insight .top-variant{background:#fef2f2;border-color:#fecaca;color:#b91c1c;}
         .variant-insight .top-defect{background:#fff7ed;border-color:#fed7aa;color:#c2410c;}
         .filter-bar.monthly-mode .month-only{display:none;}
+        .executive-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px;}
+        .executive-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:17px 19px;box-shadow:var(--shadow);}
+        .executive-card .label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.55px;color:var(--text-secondary);font-weight:700;margin-bottom:5px;}
+        .executive-card .value{font-size:1.45rem;font-weight:800;line-height:1.2;color:#0f172a;overflow-wrap:anywhere;}
+        .executive-card .sub{font-size:0.75rem;color:var(--text-secondary);margin-top:5px;}
+        .quality-panel{background:#fff;border:1px solid var(--border);border-left:4px solid #f59e0b;border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;box-shadow:var(--shadow);}
+        .quality-panel.good{border-left-color:#10b981;background:#f0fdf4;}
+        .quality-panel h3{font-size:0.9rem;margin-bottom:8px;}
+        .quality-list{margin:0;padding-left:19px;color:#7c2d12;font-size:0.8rem;display:grid;gap:5px;}
+        .quality-panel.good .quality-list{color:#166534;}
+        .alert-badge{display:inline-block;border-radius:50px;padding:3px 9px;font-size:0.7rem;font-weight:800;white-space:nowrap;}
+        .alert-critical{background:#fee2e2;color:#b91c1c;}
+        .alert-high{background:#ffedd5;color:#c2410c;}
+        .alert-monitor{background:#fef9c3;color:#a16207;}
+        .alert-stable{background:#e0f2fe;color:#0369a1;}
+        .alert-improving{background:#dcfce7;color:#15803d;}
+        .alert-new{background:#f3e8ff;color:#7e22ce;}
+        .empty-state{text-align:center;color:var(--text-secondary);padding:18px;font-size:0.82rem;}
         .loading-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);z-index:200;justify-content:center;align-items:center;flex-direction:column;gap:16px;}
         .loading-overlay.active{display:flex;}
         .spinner{width:44px;height:44px;border:4px solid var(--border);border-top:4px solid #2563eb;border-radius:50%;animation:spin 0.7s linear infinite;}
@@ -138,6 +156,7 @@
             .dashboard-tabs{padding:10px 14px 2px;}
             .dashboard-tab{flex:1;padding:9px 10px;}
             .monthly-product-grid{grid-template-columns:1fr;}
+            .executive-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
         }
     </style>
 </head>
@@ -145,7 +164,7 @@
 
 <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
-    <div class="loading-text" id="loadingText">Memuatkan data dari Google Sheets...</div>
+    <div class="loading-text" id="loadingText">Loading data from Google Sheets...</div>
 </div>
 
 <header class="header">
@@ -154,7 +173,7 @@
         <div><h1>NCIG Warranty Analytics</h1><span class="subtitle">Batch & Defect Tracking Dashboard</span></div>
     </div>
     <div class="refresh-area">
-        <span id="statusText">⏳ Memuatkan...</span>
+        <span id="statusText">⏳ Loading...</span>
         <button class="refresh-btn" id="refreshBtn" onclick="loadData()">🔄 Refresh Data</button>
     </div>
 </header>
@@ -181,6 +200,18 @@
 
     <section id="overviewPanel" class="tab-panel active">
 
+    <div class="section-header"><div class="section-icon" style="background:#0f172a;">◆</div><h2>Executive Summary</h2><span class="badge" style="background:#e2e8f0;color:#334155;" id="executivePeriod">Latest Month</span></div>
+    <div class="executive-grid">
+        <div class="executive-card"><div class="label">Monthly Complaints</div><div class="value" id="execComplaintTotal">-</div><div class="sub" id="execComplaintSub">Latest valid reporting month</div></div>
+        <div class="executive-card"><div class="label">Month-over-Month Change</div><div class="value" id="execMonthlyChange">-</div><div class="sub" id="execChangeSub">Compared with previous month</div></div>
+        <div class="executive-card"><div class="label">Highest-Complaint Variant</div><div class="value" id="execTopVariant">-</div><div class="sub" id="execTopVariantSub">Product and complaint count</div></div>
+        <div class="executive-card"><div class="label">Top Defect</div><div class="value" id="execTopDefect">-</div><div class="sub" id="execTopDefectSub">Complaint count</div></div>
+    </div>
+    <div class="quality-panel" id="dataQualityPanel">
+        <h3>🛡 Data Quality Warnings</h3>
+        <ul class="quality-list" id="dataQualityList"><li>Checking data quality...</li></ul>
+    </div>
+
     <div class="kpi-grid">
         <div class="kpi-card"><div class="kpi-accent" style="background:#2563eb;"></div><div class="kpi-label">NCIG PRO</div><div class="kpi-value" id="kpiNcigPro" style="color:#2563eb;">-</div><div class="kpi-sub">Total Tickets</div></div>
         <div class="kpi-card"><div class="kpi-accent" style="background:#10b981;"></div><div class="kpi-label">NCIG ONE</div><div class="kpi-value" id="kpiNcigOne" style="color:#10b981;">-</div><div class="kpi-sub">Total Tickets</div></div>
@@ -192,6 +223,12 @@
     <div class="chart-card">
         <h3>📊 Total Tickets by Product</h3>
         <div class="chart-wrapper"><canvas id="chartVolume"></canvas></div>
+    </div>
+
+    <div class="section-header"><div class="section-icon" style="background:#b91c1c;">🔥</div><h2 style="color:#991b1b;">Batch Hotspots</h2><span class="badge" style="background:#fef2f2;color:#b91c1c;">3+ Complaints</span></div>
+    <div class="chart-card">
+        <h3>Repeated Complaints by Batch / Serial Number</h3>
+        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="batchHotspotTable"><thead><tr><th>Product</th><th>Variant</th><th>Batch / Serial Number</th><th>Complaints</th><th>Top Defect</th></tr></thead><tbody></tbody></table></div>
     </div>
 
     <!-- NCIG PRO -->
@@ -262,7 +299,11 @@
 
     <section id="monthlyPanel" class="tab-panel">
         <div class="section-header"><div class="section-icon" style="background:#dc2626;">⚠️</div><h2 style="color:#991b1b;">Monthly Complaint Monitor</h2><span class="badge" style="background:#fef2f2;color:#b91c1c;">Management View</span></div>
-        <div class="management-note"><strong>Nota:</strong> Analisis ini berdasarkan jumlah warranty complaint yang diterima, bukan defect rate kerana data unit jualan tidak tersedia. Setiap graf produk menunjukkan lima variant dengan complaint tertinggi mengikut bulan, serta variant dan defect utama. Semua analisis mengikut penapis Category.</div>
+        <div class="management-note"><strong>Note:</strong> This analysis is based on warranty complaint counts, not defect rate, because unit-sales data is unavailable. Each product chart shows the five variants with the highest complaint volume by month, together with the leading variant and defect. All analysis follows the Category filter.</div>
+        <div class="chart-card">
+            <h3>🚨 Monthly Trend Alerts <span id="trendAlertPeriod" style="color:#64748b;font-size:0.75rem;font-weight:600;"></span></h3>
+            <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="monthlyAlertTable"><thead><tr><th>Product</th><th>Current Month</th><th>Previous Month</th><th>Change</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+        </div>
         <div class="chart-card">
             <h3>📈 All Products — Monthly Comparison</h3>
             <div class="chart-wrapper"><canvas id="chartMonthlyComplaint"></canvas></div>
@@ -307,7 +348,7 @@
         {name:'NCIG ULTRA',kpiId:'kpiNcigUltra',badgeId:'ncigUltraBadge',summaryId:'ncigUltraSummary',tableId:'ncigUltraTable',tableClass:'ncigultra-table',batchTableId:'ncigUltraBatchTable',pieKey:'ncigUltraPie',pieCanvas:'chartNcigUltraPie'},
     ];
 
-    function showLoading(msg){ document.getElementById('loadingOverlay').classList.add('active'); document.getElementById('loadingText').textContent = msg||'Memuatkan data...'; document.getElementById('refreshBtn').disabled=true; }
+    function showLoading(msg){ document.getElementById('loadingOverlay').classList.add('active'); document.getElementById('loadingText').textContent = msg||'Loading data...'; document.getElementById('refreshBtn').disabled=true; }
     function hideLoading(){ document.getElementById('loadingOverlay').classList.remove('active'); document.getElementById('refreshBtn').disabled=false; }
     function showError(msg){ const b=document.getElementById('errorBox'); b.textContent=msg; b.classList.add('active'); }
     function hideError(){ document.getElementById('errorBox').classList.remove('active'); }
@@ -368,7 +409,7 @@
         if(!res.ok) throw new Error(`Dashboard API HTTP ${res.status}`);
         const payload = await res.json();
         if(!payload || payload.success !== true || !Array.isArray(payload.rows)){
-            throw new Error((payload && payload.message) || 'Respons Dashboard API tidak sah');
+            throw new Error((payload && payload.message) || 'Invalid dashboard API response');
         }
         return payload.rows;
     }
@@ -377,12 +418,12 @@
         const res = await fetch(LEGACY_CSV_URL + '&_=' + Date.now());
         if(!res.ok) throw new Error(`Legacy sheet HTTP ${res.status}`);
         const text = await res.text();
-        if(!text || text.trim().length < 10) throw new Error('Data lama kosong');
+        if(!text || text.trim().length < 10) throw new Error('Legacy data source is empty');
         return parseCSV(text);
     }
 
     window.loadData = async function(){
-        showLoading('Memuatkan data User dan Seller...');
+        showLoading('Loading User and Seller data...');
         hideError();
         try{
             let parsed;
@@ -391,22 +432,22 @@
             try{
                 parsed = await loadDashboardApi();
             } catch(apiError){
-                console.warn('Dashboard API belum aktif, menggunakan data lama:', apiError);
+                console.warn('Dashboard API unavailable, using legacy data:', apiError);
                 parsed = await loadLegacyData();
                 sourceLabel = 'Legacy Warranty Form';
             }
 
-            if(!parsed.length) throw new Error('Tiada data dijumpai');
+            if(!parsed.length) throw new Error('No data found');
             rawData = parsed.map(normalizeRow).filter(r=>r['Produk']&&r['Defect']);
-            if(!rawData.length) throw new Error('Tiada data warranty yang sah.');
+            if(!rawData.length) throw new Error('No valid warranty data found.');
 
             const now = new Date();
             document.getElementById('statusText').textContent =
-                `✅ ${sourceLabel}: ${now.toLocaleTimeString('ms-MY')}`;
+                `✅ ${sourceLabel}: ${now.toLocaleTimeString('en-MY')}`;
             updateAll();
         } catch(err){
-            showError('❌ Gagal memuatkan data: ' + err.message);
-            document.getElementById('statusText').textContent = '❌ Gagal memuatkan';
+            showError('❌ Unable to load data: ' + err.message);
+            document.getElementById('statusText').textContent = '❌ Load failed';
         }
         hideLoading();
     };
@@ -601,6 +642,154 @@
         });
     }
 
+    function currentMonthKey(){ return new Date().toISOString().slice(0,7); }
+
+    function previousMonthKey(month){
+        const parts=month.split('-').map(Number);
+        const d=new Date(Date.UTC(parts[0],parts[1]-2,1));
+        return d.toISOString().slice(0,7);
+    }
+
+    function validManagementRows(){
+        const current=currentMonthKey();
+        return getManagementData().filter(function(row){ return /^\d{4}-\d{2}$/.test(row['Bulan']||'') && row['Bulan']<=current; });
+    }
+
+    function reportingMonth(rows){
+        if(currentMonthFilter!=='all' && /^\d{4}-\d{2}$/.test(currentMonthFilter) && currentMonthFilter<=currentMonthKey()) return currentMonthFilter;
+        const months=Array.from(new Set(rows.map(function(row){ return row['Bulan']; }))).sort();
+        return months.length?months[months.length-1]:'';
+    }
+
+    function highestEntry(rows,key){
+        const counts={};
+        rows.forEach(function(row){ const value=row[key]||'Unknown'; counts[value]=(counts[value]||0)+1; });
+        return Object.entries(counts).sort(function(a,b){ return b[1]-a[1]; })[0]||['None',0];
+    }
+
+    function renderExecutiveSummary(){
+        const rows=validManagementRows();
+        const month=reportingMonth(rows);
+        const previous=month?previousMonthKey(month):'';
+        const currentRows=rows.filter(function(row){ return row['Bulan']===month; });
+        const previousRows=rows.filter(function(row){ return row['Bulan']===previous; });
+        const topDefect=highestEntry(currentRows,'Defect');
+        const variantCounts={};
+        currentRows.forEach(function(row){
+            const key=(row['Produk']||'Unknown')+'|||'+(row['Varian']||'Unknown');
+            variantCounts[key]=(variantCounts[key]||0)+1;
+        });
+        const topVariant=Object.entries(variantCounts).sort(function(a,b){ return b[1]-a[1]; })[0]||['None|||None',0];
+        const variantParts=topVariant[0].split('|||');
+        let changeText='0.0%';
+        let changeSub='No change from '+(previous||'previous month');
+        if(previousRows.length===0 && currentRows.length>0){ changeText='New'; changeSub='No complaints recorded in '+previous; }
+        else if(previousRows.length>0){
+            const change=((currentRows.length-previousRows.length)/previousRows.length)*100;
+            changeText=(change>0?'+':'')+change.toFixed(1)+'%';
+            changeSub=(change>0?'Increase':'Change')+' from '+previous;
+        }
+        document.getElementById('executivePeriod').textContent=month||'No Valid Month';
+        document.getElementById('execComplaintTotal').textContent=currentRows.length;
+        document.getElementById('execComplaintSub').textContent=month?'Reporting month: '+month:'No valid reporting month';
+        document.getElementById('execMonthlyChange').textContent=changeText;
+        document.getElementById('execChangeSub').textContent=changeSub;
+        document.getElementById('execTopVariant').textContent=variantParts[1];
+        document.getElementById('execTopVariantSub').textContent=variantParts[0]+' · '+topVariant[1]+' complaints';
+        document.getElementById('execTopDefect').textContent=topDefect[0];
+        document.getElementById('execTopDefectSub').textContent=topDefect[1]+' complaints in '+(month||'selected period');
+    }
+
+    function renderDataQualityWarnings(){
+        const panel=document.getElementById('dataQualityPanel');
+        const list=document.getElementById('dataQualityList');
+        const current=currentMonthKey();
+        const warnings=[];
+        const futureRows=rawData.filter(function(row){ return /^\d{4}-\d{2}$/.test(row['Bulan']||'') && row['Bulan']>current; });
+        const missingMonth=rawData.filter(function(row){ return !/^\d{4}-\d{2}$/.test(row['Bulan']||''); }).length;
+        const missingVariant=rawData.filter(function(row){ return !row['Varian'] || row['Varian']==='Unknown'; }).length;
+        const missingDefect=rawData.filter(function(row){ return !row['Defect'] || row['Defect']==='Unknown'; }).length;
+        const missingBatch=rawData.filter(function(row){ return !row['Batch'] || row['Batch']==='Unknown'; }).length;
+        const variantForms={};
+        rawData.forEach(function(row){
+            const value=(row['Varian']||'').trim();
+            if(!value) return;
+            const canonical=value.toLowerCase().replace(/\s+/g,' ');
+            if(!variantForms[canonical]) variantForms[canonical]=new Set();
+            variantForms[canonical].add(value);
+        });
+        const inconsistent=Object.values(variantForms).filter(function(forms){ return forms.size>1; }).length;
+        if(futureRows.length) warnings.push(futureRows.length+' record(s) use a future reporting month, including '+futureRows[0]['Bulan']+'.');
+        if(missingMonth) warnings.push(missingMonth+' record(s) have a missing or invalid date.');
+        if(missingVariant) warnings.push(missingVariant+' record(s) have no valid variant.');
+        if(missingDefect) warnings.push(missingDefect+' record(s) have no valid defect.');
+        if(missingBatch) warnings.push(missingBatch+' record(s) have no batch or serial number.');
+        if(inconsistent) warnings.push(inconsistent+' variant name(s) use inconsistent capitalisation or spacing.');
+        list.innerHTML='';
+        if(!warnings.length){
+            panel.classList.add('good');
+            const li=document.createElement('li'); li.textContent='No data-quality warnings detected.'; list.appendChild(li);
+        }else{
+            panel.classList.remove('good');
+            warnings.forEach(function(message){ const li=document.createElement('li'); li.textContent=message; list.appendChild(li); });
+        }
+    }
+
+    function renderBatchHotspots(){
+        const map={};
+        filteredData.forEach(function(row){
+            const batch=(row['Batch']||'').trim();
+            if(!batch || batch==='Unknown') return;
+            const key=[row['Produk']||'Unknown',row['Varian']||'Unknown',batch].join('|||');
+            if(!map[key]) map[key]={product:row['Produk']||'Unknown',variant:row['Varian']||'Unknown',batch:batch,total:0,defects:{}};
+            map[key].total++;
+            const defect=row['Defect']||'Unknown';
+            map[key].defects[defect]=(map[key].defects[defect]||0)+1;
+        });
+        const hotspots=Object.values(map).filter(function(item){ return item.total>=3; }).sort(function(a,b){ return b.total-a.total; }).slice(0,15);
+        const tbody=document.querySelector('#batchHotspotTable tbody');
+        tbody.innerHTML='';
+        if(!hotspots.length){
+            const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=5; td.className='empty-state'; td.textContent='No batch hotspots found for the selected filters.'; tr.appendChild(td); tbody.appendChild(tr); return;
+        }
+        hotspots.forEach(function(item){
+            const topDefect=Object.entries(item.defects).sort(function(a,b){ return b[1]-a[1]; })[0]||['Unknown',0];
+            const tr=document.createElement('tr');
+            [item.product,item.variant,item.batch,String(item.total),topDefect[0]+' ('+topDefect[1]+')'].forEach(function(value,index){
+                const td=document.createElement('td'); td.textContent=value; if(index===2) td.className='batch-col'; if(index===3) td.innerHTML='<span class="count-badge">'+item.total+'</span>'; tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+    }
+
+    function trendStatus(current,previous){
+        if(previous===0) return current>0?{label:'New',className:'alert-new',change:null}:{label:'Stable',className:'alert-stable',change:0};
+        const change=((current-previous)/previous)*100;
+        if(change>=50) return {label:'Critical',className:'alert-critical',change:change};
+        if(change>=25) return {label:'High',className:'alert-high',change:change};
+        if(change>=10) return {label:'Monitor',className:'alert-monitor',change:change};
+        if(change<=-10) return {label:'Improving',className:'alert-improving',change:change};
+        return {label:'Stable',className:'alert-stable',change:change};
+    }
+
+    function renderMonthlyTrendAlerts(){
+        const rows=validManagementRows();
+        const month=reportingMonth(rows);
+        const previous=month?previousMonthKey(month):'';
+        document.getElementById('trendAlertPeriod').textContent=month?'('+month+' vs '+previous+')':'';
+        const tbody=document.querySelector('#monthlyAlertTable tbody');
+        tbody.innerHTML='';
+        PRODUCTS.forEach(function(product){
+            const current=rows.filter(function(row){ return row['Produk']===product && row['Bulan']===month; }).length;
+            const prior=rows.filter(function(row){ return row['Produk']===product && row['Bulan']===previous; }).length;
+            const status=trendStatus(current,prior);
+            const change=status.change===null?'New':(status.change>0?'+':'')+status.change.toFixed(1)+'%';
+            const tr=document.createElement('tr');
+            [product,String(current),String(prior),change].forEach(function(value){ const td=document.createElement('td'); td.textContent=value; tr.appendChild(td); });
+            const statusTd=document.createElement('td'); const badge=document.createElement('span'); badge.className='alert-badge '+status.className; badge.textContent=status.label; statusTd.appendChild(badge); tr.appendChild(statusTd); tbody.appendChild(tr);
+        });
+    }
+
     function renderKPI(){ PRODUCT_CONFIG.forEach(c=>{ document.getElementById(c.kpiId).textContent=getProductData(c.name).length; }); }
 
     function renderVolumeChart(){
@@ -657,14 +846,18 @@
     }
 
     function updateAll(){
-        extractMonths(); applyFilter(); renderKPI(); renderVolumeChart(); renderMonthlyComplaintOverview();
+        extractMonths(); applyFilter(); renderExecutiveSummary(); renderDataQualityWarnings(); renderKPI(); renderVolumeChart(); renderBatchHotspots(); renderMonthlyTrendAlerts(); renderMonthlyComplaintOverview();
         PRODUCT_CONFIG.forEach(c=>{ renderProductHeatmap(c); renderProductPie(c); renderBatchTable(c); });
     }
 
     function refreshDashboardViews(){
         applyFilter();
+        renderExecutiveSummary();
+        renderDataQualityWarnings();
         renderKPI();
         renderVolumeChart();
+        renderBatchHotspots();
+        renderMonthlyTrendAlerts();
         renderMonthlyComplaintOverview();
         PRODUCT_CONFIG.forEach(c=>{ renderProductHeatmap(c); renderProductPie(c); renderBatchTable(c); });
     }
