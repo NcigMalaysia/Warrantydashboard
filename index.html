@@ -35,6 +35,12 @@
         .container{max-width:1440px;margin:0 auto;padding:8px 28px 32px;}
         .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:22px;}
         .kpi-card{background:var(--card-bg);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);border:1px solid var(--border);position:relative;overflow:hidden;}
+        .kpi-card[data-defect-target]{cursor:pointer;transition:transform var(--transition),box-shadow var(--transition),border-color var(--transition);}
+        .kpi-card[data-defect-target]:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(15,23,42,0.12);border-color:#93c5fd;}
+        .kpi-card[data-defect-target]:focus-visible{outline:3px solid rgba(37,99,235,0.28);outline-offset:3px;border-color:#2563eb;}
+        .kpi-card[data-defect-target] .kpi-sub::after{content:" · View defect distribution";color:#2563eb;font-weight:700;}
+        .pie-section.ticket-jump-highlight{animation:ticketJumpHighlight 1.8s ease;}
+        @keyframes ticketJumpHighlight{0%{background:#dbeafe;box-shadow:0 0 0 4px rgba(37,99,235,0.28);}100%{background:transparent;box-shadow:none;}}
         .kpi-card .kpi-accent{position:absolute;top:0;left:0;width:5px;height:100%;border-radius:5px 0 0 5px;}
         .kpi-card .kpi-label{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-secondary);font-weight:600;margin-bottom:4px;}
         .kpi-card .kpi-value{font-size:2.4rem;font-weight:800;letter-spacing:-1px;line-height:1;}
@@ -213,11 +219,11 @@
     </div>
 
     <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-accent" style="background:#2563eb;"></div><div class="kpi-label">NCIG PRO</div><div class="kpi-value" id="kpiNcigPro" style="color:#2563eb;">-</div><div class="kpi-sub">Total Tickets</div></div>
-        <div class="kpi-card"><div class="kpi-accent" style="background:#10b981;"></div><div class="kpi-label">NCIG ONE</div><div class="kpi-value" id="kpiNcigOne" style="color:#10b981;">-</div><div class="kpi-sub">Total Tickets</div></div>
-        <div class="kpi-card"><div class="kpi-accent" style="background:#f59e0b;"></div><div class="kpi-label">NCIG CUBE</div><div class="kpi-value" id="kpiNcigCube" style="color:#f59e0b;">-</div><div class="kpi-sub">Total Tickets</div></div>
-        <div class="kpi-card"><div class="kpi-accent" style="background:#8b5cf6;"></div><div class="kpi-label">NPOD PRO</div><div class="kpi-value" id="kpiNpodPro" style="color:#8b5cf6;">-</div><div class="kpi-sub">Total Tickets</div></div>
-        <div class="kpi-card"><div class="kpi-accent" style="background:#ec4899;"></div><div class="kpi-label">NCIG ULTRA</div><div class="kpi-value" id="kpiNcigUltra" style="color:#ec4899;">-</div><div class="kpi-sub">Total Tickets</div></div>
+        <div class="kpi-card" data-defect-target="defectNcigPro" role="button" tabindex="0" aria-label="View defect distribution for NCIG PRO"><div class="kpi-accent" style="background:#2563eb;"></div><div class="kpi-label">NCIG PRO</div><div class="kpi-value" id="kpiNcigPro" style="color:#2563eb;">-</div><div class="kpi-sub">Total Tickets</div></div>
+        <div class="kpi-card" data-defect-target="defectNcigOne" role="button" tabindex="0" aria-label="View defect distribution for NCIG ONE"><div class="kpi-accent" style="background:#10b981;"></div><div class="kpi-label">NCIG ONE</div><div class="kpi-value" id="kpiNcigOne" style="color:#10b981;">-</div><div class="kpi-sub">Total Tickets</div></div>
+        <div class="kpi-card" data-defect-target="defectNcigCube" role="button" tabindex="0" aria-label="View defect distribution for NCIG CUBE"><div class="kpi-accent" style="background:#f59e0b;"></div><div class="kpi-label">NCIG CUBE</div><div class="kpi-value" id="kpiNcigCube" style="color:#f59e0b;">-</div><div class="kpi-sub">Total Tickets</div></div>
+        <div class="kpi-card" data-defect-target="defectNpodPro" role="button" tabindex="0" aria-label="View defect distribution for NPOD PRO"><div class="kpi-accent" style="background:#8b5cf6;"></div><div class="kpi-label">NPOD PRO</div><div class="kpi-value" id="kpiNpodPro" style="color:#8b5cf6;">-</div><div class="kpi-sub">Total Tickets</div></div>
+        <div class="kpi-card" data-defect-target="defectNcigUltra" role="button" tabindex="0" aria-label="View defect distribution for NCIG ULTRA"><div class="kpi-accent" style="background:#ec4899;"></div><div class="kpi-label">NCIG ULTRA</div><div class="kpi-value" id="kpiNcigUltra" style="color:#ec4899;">-</div><div class="kpi-sub">Total Tickets</div></div>
     </div>
 
     <div class="chart-card">
@@ -237,7 +243,7 @@
         <h3>📋 Heatmap: Variant vs Defect</h3>
         <div class="summary-row ncigpro" id="ncigProSummary"></div>
         <div class="heatmap-table-wrapper"><table class="heatmap-table ncigpro-table" id="ncigProTable"><thead></thead><tbody></tbody></table></div>
-        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG PRO</h4><div class="pie-wrapper"><canvas id="chartNcigProPie"></canvas></div></div>
+        <div class="pie-section" id="defectNcigPro"><h4>🥧 Defect Distribution – NCIG PRO</h4><div class="pie-wrapper"><canvas id="chartNcigProPie"></canvas></div></div>
     </div>
     <div class="batch-card ncigpro" style="margin-bottom:14px;">
         <h4>📦 Batch Issues – NCIG PRO</h4>
@@ -250,7 +256,7 @@
         <h3>📋 Heatmap: Variant vs Defect</h3>
         <div class="summary-row ncigone" id="ncigOneSummary"></div>
         <div class="heatmap-table-wrapper"><table class="heatmap-table ncigone-table" id="ncigOneTable"><thead></thead><tbody></tbody></table></div>
-        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG ONE</h4><div class="pie-wrapper"><canvas id="chartNcigOnePie"></canvas></div></div>
+        <div class="pie-section" id="defectNcigOne"><h4>🥧 Defect Distribution – NCIG ONE</h4><div class="pie-wrapper"><canvas id="chartNcigOnePie"></canvas></div></div>
     </div>
     <div class="batch-card ncigone" style="margin-bottom:14px;">
         <h4>📦 Batch Issues – NCIG ONE</h4>
@@ -263,7 +269,7 @@
         <h3>📋 Heatmap: Variant vs Defect</h3>
         <div class="summary-row ncigcube" id="ncigCubeSummary"></div>
         <div class="heatmap-table-wrapper"><table class="heatmap-table ncigcube-table" id="ncigCubeTable"><thead></thead><tbody></tbody></table></div>
-        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG CUBE</h4><div class="pie-wrapper"><canvas id="chartNcigCubePie"></canvas></div></div>
+        <div class="pie-section" id="defectNcigCube"><h4>🥧 Defect Distribution – NCIG CUBE</h4><div class="pie-wrapper"><canvas id="chartNcigCubePie"></canvas></div></div>
     </div>
     <div class="batch-card ncigcube" style="margin-bottom:14px;">
         <h4>📦 Batch Issues – NCIG CUBE</h4>
@@ -276,7 +282,7 @@
         <h3>📋 Heatmap: Variant vs Defect</h3>
         <div class="summary-row npod" id="npodSummary"></div>
         <div class="heatmap-table-wrapper"><table class="heatmap-table npod-table" id="npodTable"><thead></thead><tbody></tbody></table></div>
-        <div class="pie-section"><h4>🥧 Defect Distribution – NPOD PRO</h4><div class="pie-wrapper"><canvas id="chartNpodPie"></canvas></div></div>
+        <div class="pie-section" id="defectNpodPro"><h4>🥧 Defect Distribution – NPOD PRO</h4><div class="pie-wrapper"><canvas id="chartNpodPie"></canvas></div></div>
     </div>
     <div class="batch-card npod" style="margin-bottom:14px;">
         <h4>📦 Batch Issues – NPOD PRO</h4>
@@ -289,7 +295,7 @@
         <h3>📋 Heatmap: Variant vs Defect</h3>
         <div class="summary-row ncigultra" id="ncigUltraSummary"></div>
         <div class="heatmap-table-wrapper"><table class="heatmap-table ncigultra-table" id="ncigUltraTable"><thead></thead><tbody></tbody></table></div>
-        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG ULTRA</h4><div class="pie-wrapper"><canvas id="chartNcigUltraPie"></canvas></div></div>
+        <div class="pie-section" id="defectNcigUltra"><h4>🥧 Defect Distribution – NCIG ULTRA</h4><div class="pie-wrapper"><canvas id="chartNcigUltraPie"></canvas></div></div>
     </div>
     <div class="batch-card ncigultra" style="margin-bottom:14px;">
         <h4>📦 Batch / Serial Issues – NCIG ULTRA</h4>
@@ -875,6 +881,26 @@
 
     document.querySelectorAll('.dashboard-tab').forEach(function(button){
         button.addEventListener('click',function(){ setDashboardTab(button.dataset.panel); });
+    });
+
+    function jumpToDefectDistribution(card){
+        const target = document.getElementById(card.dataset.defectTarget);
+        if(!target) return;
+        target.classList.remove('ticket-jump-highlight');
+        void target.offsetWidth;
+        target.classList.add('ticket-jump-highlight');
+        target.scrollIntoView({behavior:'smooth',block:'center'});
+        window.setTimeout(function(){ target.classList.remove('ticket-jump-highlight'); },1900);
+    }
+
+    document.querySelectorAll('.kpi-card[data-defect-target]').forEach(function(card){
+        card.addEventListener('click',function(){ jumpToDefectDistribution(card); });
+        card.addEventListener('keydown',function(event){
+            if(event.key==='Enter'||event.key===' '){
+                event.preventDefault();
+                jumpToDefectDistribution(card);
+            }
+        });
     });
 
         document.getElementById('monthFilter').addEventListener('change',function(e){
