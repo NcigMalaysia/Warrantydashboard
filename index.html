@@ -111,8 +111,25 @@
         .dashboard-tab.active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;box-shadow:0 3px 10px rgba(37,99,235,0.22);}
         .tab-panel{display:none;}
         .tab-panel.active{display:block;}
-        .monthly-product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px;}
-        .monthly-product-grid .chart-card{margin-bottom:0;min-height:330px;}
+        .horizontal-scroll-shell{margin:24px 0 18px;}
+        .horizontal-scroll-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
+        .horizontal-scroll-toolbar h2{font-size:1.05rem;font-weight:800;color:#0f172a;}
+        .horizontal-scroll-toolbar p{font-size:0.78rem;color:var(--text-secondary);margin-top:2px;}
+        .horizontal-scroll-actions{display:flex;gap:8px;flex-shrink:0;}
+        .horizontal-scroll-btn{border:1px solid var(--border);background:#fff;color:#334155;border-radius:9px;padding:8px 13px;font-size:0.78rem;font-weight:700;cursor:pointer;transition:var(--transition);}
+        .horizontal-scroll-btn:hover{border-color:#93c5fd;color:#1d4ed8;background:#eff6ff;}
+        .product-scroll-track,.monthly-product-grid{display:flex;gap:18px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scroll-behavior:smooth;padding:2px 2px 14px;scrollbar-width:thin;scrollbar-color:#94a3b8 #e2e8f0;}
+        .product-scroll-track::-webkit-scrollbar,.monthly-product-grid::-webkit-scrollbar{height:10px;}
+        .product-scroll-track::-webkit-scrollbar-track,.monthly-product-grid::-webkit-scrollbar-track{background:#e2e8f0;border-radius:10px;}
+        .product-scroll-track::-webkit-scrollbar-thumb,.monthly-product-grid::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:10px;border:2px solid #e2e8f0;}
+        .product-slide{flex:0 0:min(1120px,calc(100vw - 92px));scroll-snap-align:start;scroll-snap-stop:always;}
+        .product-slide>.section-header{margin-top:0;}
+        .product-slide .product-card{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.55fr);grid-template-rows:auto auto 1fr;column-gap:20px;}
+        .product-slide .product-card>h3,.product-slide .product-card>.summary-row,.product-slide .product-card>.heatmap-table-wrapper{grid-column:1;}
+        .product-slide .product-card>.pie-section{grid-column:2;grid-row:1/4;border-top:0;border-left:1px solid #e2e8f0;margin-top:0;padding:0 0 0 20px;align-self:stretch;}
+        .product-slide .pie-wrapper canvas{max-height:280px;}
+        .monthly-product-grid{margin-bottom:18px;}
+        .monthly-product-grid .chart-card{flex:0 0:min(640px,calc(100vw - 92px));scroll-snap-align:start;scroll-snap-stop:always;margin-bottom:0;min-height:330px;}
         .monthly-product-grid .chart-wrapper{height:260px;}
         .variant-insight{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 12px;}
         .variant-insight span{display:inline-flex;align-items:center;padding:5px 10px;border-radius:50px;background:#f8fafc;border:1px solid #e2e8f0;color:#334155;font-size:0.74rem;font-weight:700;}
@@ -155,7 +172,13 @@
             .kpi-card .kpi-value{font-size:1.8rem;}
             .dashboard-tabs{padding:10px 14px 2px;}
             .dashboard-tab{flex:1;padding:9px 10px;}
-            .monthly-product-grid{grid-template-columns:1fr;}
+            .horizontal-scroll-toolbar{align-items:flex-start;}
+            .horizontal-scroll-toolbar p{display:none;}
+            .horizontal-scroll-actions{gap:6px;}
+            .horizontal-scroll-btn{padding:7px 10px;}
+            .product-slide,.monthly-product-grid .chart-card{flex-basis:calc(100vw - 28px);}
+            .product-slide .product-card{display:block;}
+            .product-slide .product-card>.pie-section{border-left:0;border-top:1px solid #e2e8f0;margin-top:14px;padding:18px 0 0;}
             .executive-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
         }
     </style>
@@ -231,69 +254,86 @@
         <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="batchHotspotTable"><thead><tr><th>Product</th><th>Variant</th><th>Batch / Serial Number</th><th>Complaints</th><th>Top Defect</th></tr></thead><tbody></tbody></table></div>
     </div>
 
-    <!-- NCIG PRO -->
-    <div class="section-header"><div class="section-icon" style="background:#2563eb;">🔵</div><h2 style="color:#1d4ed8;">NCIG PRO</h2><span class="badge" style="background:#eff6ff;color:#2563eb;" id="ncigProBadge">0 records</span></div>
-    <div class="product-card ncigpro">
-        <h3>📋 Heatmap: Variant vs Defect</h3>
-        <div class="summary-row ncigpro" id="ncigProSummary"></div>
-        <div class="heatmap-table-wrapper"><table class="heatmap-table ncigpro-table" id="ncigProTable"><thead></thead><tbody></tbody></table></div>
-        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG PRO</h4><div class="pie-wrapper"><canvas id="chartNcigProPie"></canvas></div></div>
-    </div>
-    <div class="batch-card ncigpro" style="margin-bottom:14px;">
-        <h4>📦 Batch Issues – NCIG PRO</h4>
-        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="ncigProBatchTable"><thead><tr><th>Variant</th><th>Batch Number</th><th>Defect Types</th><th>Total</th></tr></thead><tbody></tbody></table></div>
-    </div>
-
-    <!-- NCIG ONE -->
-    <div class="section-header"><div class="section-icon" style="background:#10b981;">🟢</div><h2 style="color:#059669;">NCIG ONE</h2><span class="badge" style="background:#ecfdf5;color:#059669;" id="ncigOneBadge">0 records</span></div>
-    <div class="product-card ncigone">
-        <h3>📋 Heatmap: Variant vs Defect</h3>
-        <div class="summary-row ncigone" id="ncigOneSummary"></div>
-        <div class="heatmap-table-wrapper"><table class="heatmap-table ncigone-table" id="ncigOneTable"><thead></thead><tbody></tbody></table></div>
-        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG ONE</h4><div class="pie-wrapper"><canvas id="chartNcigOnePie"></canvas></div></div>
-    </div>
-    <div class="batch-card ncigone" style="margin-bottom:14px;">
-        <h4>📦 Batch Issues – NCIG ONE</h4>
-        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="ncigOneBatchTable"><thead><tr><th>Variant</th><th>Batch Number</th><th>Defect Types</th><th>Total</th></tr></thead><tbody></tbody></table></div>
-    </div>
-
-    <!-- NCIG CUBE -->
-    <div class="section-header"><div class="section-icon" style="background:#f59e0b;">🟡</div><h2 style="color:#b45309;">NCIG CUBE</h2><span class="badge" style="background:#fffbeb;color:#b45309;" id="ncigCubeBadge">0 records</span></div>
-    <div class="product-card ncigcube">
-        <h3>📋 Heatmap: Variant vs Defect</h3>
-        <div class="summary-row ncigcube" id="ncigCubeSummary"></div>
-        <div class="heatmap-table-wrapper"><table class="heatmap-table ncigcube-table" id="ncigCubeTable"><thead></thead><tbody></tbody></table></div>
-        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG CUBE</h4><div class="pie-wrapper"><canvas id="chartNcigCubePie"></canvas></div></div>
-    </div>
-    <div class="batch-card ncigcube" style="margin-bottom:14px;">
-        <h4>📦 Batch Issues – NCIG CUBE</h4>
-        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="ncigCubeBatchTable"><thead><tr><th>Variant</th><th>Batch Number</th><th>Defect Types</th><th>Total</th></tr></thead><tbody></tbody></table></div>
-    </div>
-
-    <!-- NPOD PRO -->
-    <div class="section-header"><div class="section-icon" style="background:#8b5cf6;">🎯</div><h2 style="color:#5b21b6;">NPOD PRO</h2><span class="badge" style="background:#f5f3ff;color:#7c3aed;" id="npodBadge">0 records</span></div>
-    <div class="product-card npod">
-        <h3>📋 Heatmap: Variant vs Defect</h3>
-        <div class="summary-row npod" id="npodSummary"></div>
-        <div class="heatmap-table-wrapper"><table class="heatmap-table npod-table" id="npodTable"><thead></thead><tbody></tbody></table></div>
-        <div class="pie-section"><h4>🥧 Defect Distribution – NPOD PRO</h4><div class="pie-wrapper"><canvas id="chartNpodPie"></canvas></div></div>
-    </div>
-    <div class="batch-card npod" style="margin-bottom:14px;">
-        <h4>📦 Batch Issues – NPOD PRO</h4>
-        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="npodBatchTable"><thead><tr><th>Variant</th><th>Batch Number</th><th>Defect Types</th><th>Total</th></tr></thead><tbody></tbody></table></div>
-    </div>
-
-    <!-- NCIG ULTRA -->
-    <div class="section-header"><div class="section-icon" style="background:#ec4899;">✨</div><h2 style="color:#be185d;">NCIG ULTRA</h2><span class="badge" style="background:#fdf2f8;color:#be185d;" id="ncigUltraBadge">0 records</span></div>
-    <div class="product-card ncigultra">
-        <h3>📋 Heatmap: Variant vs Defect</h3>
-        <div class="summary-row ncigultra" id="ncigUltraSummary"></div>
-        <div class="heatmap-table-wrapper"><table class="heatmap-table ncigultra-table" id="ncigUltraTable"><thead></thead><tbody></tbody></table></div>
-        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG ULTRA</h4><div class="pie-wrapper"><canvas id="chartNcigUltraPie"></canvas></div></div>
-    </div>
-    <div class="batch-card ncigultra" style="margin-bottom:14px;">
-        <h4>📦 Batch / Serial Issues – NCIG ULTRA</h4>
-        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="ncigUltraBatchTable"><thead><tr><th>Variant</th><th>Batch / Serial Number</th><th>Defect Types</th><th>Total</th></tr></thead><tbody></tbody></table></div>
+    <div class="horizontal-scroll-shell">
+        <div class="horizontal-scroll-toolbar">
+            <div><h2>Product Analysis</h2><p>Scroll sideways to compare every product without a long page.</p></div>
+            <div class="horizontal-scroll-actions">
+                <button type="button" class="horizontal-scroll-btn" data-scroll-target="productAnalysisTrack" data-scroll-direction="-1">Previous</button>
+                <button type="button" class="horizontal-scroll-btn" data-scroll-target="productAnalysisTrack" data-scroll-direction="1">Next</button>
+            </div>
+        </div>
+        <div class="product-scroll-track" id="productAnalysisTrack" tabindex="0" aria-label="Product analysis cards">
+            <article class="product-slide">
+                <!-- NCIG PRO -->
+                    <div class="section-header"><div class="section-icon" style="background:#2563eb;">🔵</div><h2 style="color:#1d4ed8;">NCIG PRO</h2><span class="badge" style="background:#eff6ff;color:#2563eb;" id="ncigProBadge">0 records</span></div>
+                    <div class="product-card ncigpro">
+                        <h3>📋 Heatmap: Variant vs Defect</h3>
+                        <div class="summary-row ncigpro" id="ncigProSummary"></div>
+                        <div class="heatmap-table-wrapper"><table class="heatmap-table ncigpro-table" id="ncigProTable"><thead></thead><tbody></tbody></table></div>
+                        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG PRO</h4><div class="pie-wrapper"><canvas id="chartNcigProPie"></canvas></div></div>
+                    </div>
+                    <div class="batch-card ncigpro" style="margin-bottom:14px;">
+                        <h4>📦 Batch Issues – NCIG PRO</h4>
+                        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="ncigProBatchTable"><thead><tr><th>Variant</th><th>Batch Number</th><th>Defect Types</th><th>Total</th></tr></thead><tbody></tbody></table></div>
+                    </div>
+            </article>
+            <article class="product-slide">
+                <!-- NCIG ONE -->
+                    <div class="section-header"><div class="section-icon" style="background:#10b981;">🟢</div><h2 style="color:#059669;">NCIG ONE</h2><span class="badge" style="background:#ecfdf5;color:#059669;" id="ncigOneBadge">0 records</span></div>
+                    <div class="product-card ncigone">
+                        <h3>📋 Heatmap: Variant vs Defect</h3>
+                        <div class="summary-row ncigone" id="ncigOneSummary"></div>
+                        <div class="heatmap-table-wrapper"><table class="heatmap-table ncigone-table" id="ncigOneTable"><thead></thead><tbody></tbody></table></div>
+                        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG ONE</h4><div class="pie-wrapper"><canvas id="chartNcigOnePie"></canvas></div></div>
+                    </div>
+                    <div class="batch-card ncigone" style="margin-bottom:14px;">
+                        <h4>📦 Batch Issues – NCIG ONE</h4>
+                        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="ncigOneBatchTable"><thead><tr><th>Variant</th><th>Batch Number</th><th>Defect Types</th><th>Total</th></tr></thead><tbody></tbody></table></div>
+                    </div>
+            </article>
+            <article class="product-slide">
+                <!-- NCIG CUBE -->
+                    <div class="section-header"><div class="section-icon" style="background:#f59e0b;">🟡</div><h2 style="color:#b45309;">NCIG CUBE</h2><span class="badge" style="background:#fffbeb;color:#b45309;" id="ncigCubeBadge">0 records</span></div>
+                    <div class="product-card ncigcube">
+                        <h3>📋 Heatmap: Variant vs Defect</h3>
+                        <div class="summary-row ncigcube" id="ncigCubeSummary"></div>
+                        <div class="heatmap-table-wrapper"><table class="heatmap-table ncigcube-table" id="ncigCubeTable"><thead></thead><tbody></tbody></table></div>
+                        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG CUBE</h4><div class="pie-wrapper"><canvas id="chartNcigCubePie"></canvas></div></div>
+                    </div>
+                    <div class="batch-card ncigcube" style="margin-bottom:14px;">
+                        <h4>📦 Batch Issues – NCIG CUBE</h4>
+                        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="ncigCubeBatchTable"><thead><tr><th>Variant</th><th>Batch Number</th><th>Defect Types</th><th>Total</th></tr></thead><tbody></tbody></table></div>
+                    </div>
+            </article>
+            <article class="product-slide">
+                <!-- NPOD PRO -->
+                    <div class="section-header"><div class="section-icon" style="background:#8b5cf6;">🎯</div><h2 style="color:#5b21b6;">NPOD PRO</h2><span class="badge" style="background:#f5f3ff;color:#7c3aed;" id="npodBadge">0 records</span></div>
+                    <div class="product-card npod">
+                        <h3>📋 Heatmap: Variant vs Defect</h3>
+                        <div class="summary-row npod" id="npodSummary"></div>
+                        <div class="heatmap-table-wrapper"><table class="heatmap-table npod-table" id="npodTable"><thead></thead><tbody></tbody></table></div>
+                        <div class="pie-section"><h4>🥧 Defect Distribution – NPOD PRO</h4><div class="pie-wrapper"><canvas id="chartNpodPie"></canvas></div></div>
+                    </div>
+                    <div class="batch-card npod" style="margin-bottom:14px;">
+                        <h4>📦 Batch Issues – NPOD PRO</h4>
+                        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="npodBatchTable"><thead><tr><th>Variant</th><th>Batch Number</th><th>Defect Types</th><th>Total</th></tr></thead><tbody></tbody></table></div>
+                    </div>
+            </article>
+            <article class="product-slide">
+                <!-- NCIG ULTRA -->
+                    <div class="section-header"><div class="section-icon" style="background:#ec4899;">✨</div><h2 style="color:#be185d;">NCIG ULTRA</h2><span class="badge" style="background:#fdf2f8;color:#be185d;" id="ncigUltraBadge">0 records</span></div>
+                    <div class="product-card ncigultra">
+                        <h3>📋 Heatmap: Variant vs Defect</h3>
+                        <div class="summary-row ncigultra" id="ncigUltraSummary"></div>
+                        <div class="heatmap-table-wrapper"><table class="heatmap-table ncigultra-table" id="ncigUltraTable"><thead></thead><tbody></tbody></table></div>
+                        <div class="pie-section"><h4>🥧 Defect Distribution – NCIG ULTRA</h4><div class="pie-wrapper"><canvas id="chartNcigUltraPie"></canvas></div></div>
+                    </div>
+                    <div class="batch-card ncigultra" style="margin-bottom:14px;">
+                        <h4>📦 Batch / Serial Issues – NCIG ULTRA</h4>
+                        <div class="heatmap-table-wrapper"><table class="batch-mini-table" id="ncigUltraBatchTable"><thead><tr><th>Variant</th><th>Batch / Serial Number</th><th>Defect Types</th><th>Total</th></tr></thead><tbody></tbody></table></div>
+                    </div>
+            </article>
+        </div>
     </div>
     </section>
 
@@ -308,7 +348,14 @@
             <h3>📈 All Products — Monthly Comparison</h3>
             <div class="chart-wrapper"><canvas id="chartMonthlyComplaint"></canvas></div>
         </div>
-        <div class="monthly-product-grid">
+        <div class="horizontal-scroll-toolbar">
+            <div><h2>Variant Trend by Product</h2><p>Scroll sideways to compare product charts.</p></div>
+            <div class="horizontal-scroll-actions">
+                <button type="button" class="horizontal-scroll-btn" data-scroll-target="monthlyProductTrack" data-scroll-direction="-1">Previous</button>
+                <button type="button" class="horizontal-scroll-btn" data-scroll-target="monthlyProductTrack" data-scroll-direction="1">Next</button>
+            </div>
+        </div>
+        <div class="monthly-product-grid" id="monthlyProductTrack" tabindex="0" aria-label="Monthly product charts">
             <div class="chart-card"><h3 style="color:#2563eb;">NCIG PRO — Variant Complaint Trend (Top 5)</h3><div class="variant-insight" id="monthlyNcigProInsight"></div><div class="chart-wrapper"><canvas id="monthlyNcigPro"></canvas></div></div>
             <div class="chart-card"><h3 style="color:#10b981;">NCIG ONE — Variant Complaint Trend (Top 5)</h3><div class="variant-insight" id="monthlyNcigOneInsight"></div><div class="chart-wrapper"><canvas id="monthlyNcigOne"></canvas></div></div>
             <div class="chart-card"><h3 style="color:#f59e0b;">NCIG CUBE — Variant Complaint Trend (Top 5)</h3><div class="variant-insight" id="monthlyNcigCubeInsight"></div><div class="chart-wrapper"><canvas id="monthlyNcigCube"></canvas></div></div>
@@ -339,6 +386,18 @@
     const PRODUCT_COLORS = {'NCIG PRO':'#2563eb','NCIG ONE':'#10b981','NCIG CUBE':'#f59e0b','NPOD PRO':'#8b5cf6','NCIG ULTRA':'#ec4899'};
     const MONTHLY_CANVASES = {'NCIG PRO':'monthlyNcigPro','NCIG ONE':'monthlyNcigOne','NCIG CUBE':'monthlyNcigCube','NPOD PRO':'monthlyNpodPro','NCIG ULTRA':'monthlyNcigUltra'};
     const DEFECT_PALETTE = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#78716c','#14b8a6','#a855f7','#84cc16'];
+
+    document.querySelectorAll('[data-scroll-target]').forEach(button => {
+        button.addEventListener('click', () => {
+            const track = document.getElementById(button.dataset.scrollTarget);
+            if (!track) return;
+            const direction = Number(button.dataset.scrollDirection) || 1;
+            track.scrollBy({
+                left: direction * Math.max(track.clientWidth * 0.82, 320),
+                behavior: 'smooth'
+            });
+        });
+    });
 
     const PRODUCT_CONFIG = [
         {name:'NCIG PRO',kpiId:'kpiNcigPro',badgeId:'ncigProBadge',summaryId:'ncigProSummary',tableId:'ncigProTable',tableClass:'ncigpro-table',batchTableId:'ncigProBatchTable',pieKey:'ncigProPie',pieCanvas:'chartNcigProPie'},
